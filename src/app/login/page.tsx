@@ -28,6 +28,11 @@ export default async function LoginPage({
             Sign-in failed. Check that Google is enabled in Supabase and redirect URL is set (see README).
           </p>
         )}
+        {error === "restricted" && (
+          <p className="text-center text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/30 px-3 py-2 rounded">
+            Access is restricted to family members. Your email is not on the allow list.
+          </p>
+        )}
         <LoginForm />
       </div>
     </main>
