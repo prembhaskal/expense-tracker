@@ -16,7 +16,7 @@ Shared family expense tracker: multiple users, Google sign-in, single shared led
 
    - `NEXT_PUBLIC_SUPABASE_URL` – your Supabase project URL
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY` – your Supabase anon key
-   - `ALLOWED_EMAILS` – (optional) comma-separated list of Google emails that can sign in. If unset, any Google user can sign in.
+   - `ALLOWED_EMAILS` – comma-separated list of Google emails that can sign in. If unset, no one can sign in.
 
 3. **Supabase**
 
@@ -37,7 +37,7 @@ Shared family expense tracker: multiple users, Google sign-in, single shared led
 
 ## Deploy (Vercel)
 
-- Connect the repo to Vercel and set `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and optionally `ALLOWED_EMAILS` (comma-separated family emails) in project environment variables.
+- Connect the repo to Vercel and set `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and `ALLOWED_EMAILS` (comma-separated family emails) in project environment variables.
 - Add your production URL (e.g. `https://your-app.vercel.app/auth/callback`) to Supabase Redirect URLs.
 
 ## Tech

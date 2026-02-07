@@ -1,6 +1,6 @@
 /**
  * Parse ALLOWED_EMAILS env var and check if an email is allowed.
- * If ALLOWED_EMAILS is unset or empty, all emails are allowed.
+ * If ALLOWED_EMAILS is unset or empty, no one is allowed (must be set for sign-in to work).
  */
 export function getAllowedEmails(): string[] | null {
   const raw = process.env.ALLOWED_EMAILS;
@@ -15,6 +15,6 @@ export function getAllowedEmails(): string[] | null {
 export function isEmailAllowed(email: string | undefined): boolean {
   if (!email) return false;
   const allowed = getAllowedEmails();
-  if (!allowed) return true; // no restriction
+  if (!allowed) return false; // no list = no one allowed
   return allowed.includes(email.trim().toLowerCase());
 }
