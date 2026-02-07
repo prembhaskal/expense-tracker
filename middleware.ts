@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { isEmailAllowed } from "@/lib/auth-allowed-emails";
 
 const protectedPaths = ["/dashboard", "/expenses", "/categories", "/reports"];
 
@@ -39,7 +40,14 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  if (request.nextUrl.pathname === "/login" && user) {
+  if (user && isProtected(request.nextUrl.pathname) && !isEmailAllowed(user.email ?? undefined)) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/auth/signout";
+    url.searchParams.set("next", "/login?error=restricted");
+    return NextResponse.redirect(url);
+  }
+
+  if (request.nextUrl.pathname === "/login" && user && isEmailAllowed(user.email ?? undefined)) {
     const url = request.nextUrl.clone();
     url.pathname = "/dashboard";
     return NextResponse.redirect(url);
