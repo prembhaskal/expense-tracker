@@ -2,6 +2,8 @@
 
 Shared family expense tracker: multiple users, Google sign-in, single shared ledger with per-expense attribution.
 
+**App:** [https://expense-tracker-xi-five-60.vercel.app/](https://expense-tracker-xi-five-60.vercel.app/)
+
 ## Setup
 
 1. **Install dependencies**
@@ -42,5 +44,6 @@ Shared family expense tracker: multiple users, Google sign-in, single shared led
 ## Tech
 
 - Next.js 15 (App Router), React, TypeScript, Tailwind CSS
+- Preview: Vercel deploys a preview for each PR.
 - Supabase (Postgres, Auth with Google)
 - Single shared account; each expense stores `user_id` for who added it
