@@ -26,17 +26,23 @@ Google returns **ApiException: 10 (DEVELOPER_ERROR)** or **RESULT_CANCELED** if 
      cd android-app && ./gradlew signingReport
      ```
    - Or in Android Studio: **Gradle** → **android-app** → **app** → **Tasks** → **android** → **signingReport**.
-   - Under the **debug** (or **release**) variant, copy the **SHA-1** (e.g. `AA:BB:CC:...`).
+   - Copy the **SHA-1** for **Variant: release** (and **debug** if you use debug sign-in).  
+   - If release isn’t listed (no `keystore.properties`), get it from your release keystore:
+     ```bash
+     keytool -list -v -keystore android-app/release.keystore -alias expense-tracker
+     ```
+     Use the **SHA1** line (e.g. `AA:BB:CC:...`).
 
-2. **Create an Android OAuth client**
+2. **Create an Android OAuth client (per signing key)**
    - Google Cloud Console → **APIs & Services** → **Credentials**.
    - **+ Create credentials** → **OAuth client ID**.
    - Application type: **Android**.
-   - Package name: **`com.example.shared_expense_manager`** (must match `applicationId` in `app/build.gradle.kts`).
+   - Package name: **`com.prembhaskal.expensetracker`** (must match `applicationId` in `app/build.gradle.kts`).
    - SHA-1 certificate fingerprint: paste the value from step 1.
    - Create.
+   - **Release builds:** Add a **second** Android OAuth client with the **same** package name and the **release** SHA-1 (from your release keystore). Without it, release installs get “Failed to get ID token”.
 
-You do **not** put this Android client ID in the app. It only links your app (package + SHA-1) to the project so Google can issue ID tokens for the Web client.
+You do **not** put these Android client IDs in the app. They only link your app (package + SHA-1) to the project so Google can issue ID tokens for the Web client.
 
 ### 3. App config – `local.properties`
 
@@ -78,7 +84,7 @@ No runtime permission requests are needed.
 |--------|----------------|
 | **Sign-in cancelled** / **RESULT_CANCELED** | Add Android OAuth client (package + SHA-1) in Google Cloud (step 2). Wait a few minutes and retry. |
 | **ApiException: 10** | Same as above: Android app not registered or wrong package/SHA-1. |
-| **Failed to get ID token** | Confirm `google.web.client.id` in `local.properties` is the **Web** client ID and that `local.properties` is being read (see `app/build.gradle.kts`). |
+| **Failed to get ID token** | (1) Confirm `google.web.client.id` in `local.properties` is the **Web** client ID. (2) **Release build:** add the **release** SHA-1 to an Android OAuth client (same package) in Google Cloud – see step 2 above. |
 | **Permission denied (missing INTERNET?)** | Ensure `AndroidManifest.xml` includes `<uses-permission android:name="android.permission.INTERNET" />`. Rebuild and reinstall. |
 | **403 / Access restricted** | Backend allowlist: your Google email must be in `ALLOWED_EMAILS` (or equivalent) on the server. |
 
