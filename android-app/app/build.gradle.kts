@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -18,8 +20,11 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        buildConfigField("String", "API_BASE_URL", "\"https://expense-tracker-xi-five-60.vercel.app\"")
-        buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"\"")
+        val localProperties = Properties().apply {
+            rootProject.file("local.properties").takeIf { it.exists() }?.inputStream()?.use { load(it) }
+        }
+        buildConfigField("String", "API_BASE_URL", "\"${localProperties.getProperty("api.base.url", "https://expense-tracker-xi-five-60.vercel.app")}\"")
+        buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"${localProperties.getProperty("google.web.client.id", "")}\"")
     }
     buildFeatures {
         buildConfig = true

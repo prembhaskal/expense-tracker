@@ -1,6 +1,7 @@
 package com.example.shared_expense_manager.ui.login
 
 import android.app.Activity
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -29,6 +30,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+private const val TAG = "LoginScreen"
+
 @Composable
 fun LoginScreen(
     app: ExpenseTrackerApp,
@@ -42,27 +45,44 @@ fun LoginScreen(
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) { result ->
-        if (result.resultCode != Activity.RESULT_OK) {
+        val resultCodeName = when (result.resultCode) {
+            Activity.RESULT_OK -> "RESULT_OK"
+            Activity.RESULT_CANCELED -> "RESULT_CANCELED"
+            else -> "OTHER(${result.resultCode})"
+        }
+        Log.d(TAG, "onActivityResult: resultCode=$resultCodeName, data=${if (result.data == null) "null" else "present"}")
+        // Even on RESULT_CANCELED, try to read token if data is present (Google sometimes returns CANCELED when SHA-1/config is wrong)
+        if (result.resultCode != Activity.RESULT_OK && result.data == null) {
+            Log.w(TAG, "onActivityResult: no data, treating as user cancelled")
             error = "Sign-in cancelled"
             return@rememberLauncherForActivityResult
+        }
+        if (result.resultCode != Activity.RESULT_OK) {
+            Log.w(TAG, "onActivityResult: resultCode not OK but data present - attempting to get idToken anyway (check GoogleAuthHelper logs if this fails)")
         }
         loading = true
         error = null
         val idToken = app.googleAuthHelper.getIdTokenFromResult(result.data)
         if (idToken == null) {
+            Log.e(TAG, "onActivityResult: getIdTokenFromResult returned null - check GoogleAuthHelper logs")
             error = "Failed to get ID token"
             loading = false
             return@rememberLauncherForActivityResult
         }
+        Log.d(TAG, "onActivityResult: got idToken, calling API loginWithIdToken")
         scope.launch {
-            val result = withContext(Dispatchers.IO) {
+            val success = withContext(Dispatchers.IO) {
                 try {
                     val session = app.apiClient.loginWithIdToken(idToken)
+                    Log.d(TAG, "loginWithIdToken: success, got access_token")
                     app.authStore.setToken(session.accessToken)
                     SyncScheduler.enqueueOneTime(context)
                     true
                 } catch (e: Exception) {
-                    error = when ((e as? ApiException)?.code) {
+                    val apiCode = (e as? ApiException)?.code
+                    Log.e(TAG, "loginWithIdToken: failed", e)
+                    Log.e(TAG, "loginWithIdToken: apiCode=$apiCode, message=${e.message}")
+                    error = when (apiCode) {
                         403 -> "Access restricted"
                         else -> e.message ?: "Sign-in failed"
                     }
@@ -70,7 +90,7 @@ fun LoginScreen(
                 }
             }
             loading = false
-            if (result) onLoginSuccess()
+            if (success) onLoginSuccess()
         }
     }
 
