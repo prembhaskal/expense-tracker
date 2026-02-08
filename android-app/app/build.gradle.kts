@@ -7,16 +7,37 @@ plugins {
     alias(libs.plugins.ksp)
 }
 
+val keystorePropertiesFile = rootProject.file("keystore.properties")
+val keystoreProperties = Properties()
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(keystorePropertiesFile.inputStream())
+}
+
 android {
-    namespace = "com.example.shared_expense_manager"
-    compileSdk = 34
+    namespace = "com.prembhaskal.expensetracker"
+    compileSdk = 35
+
+    signingConfigs {
+        create("release") {
+            if (keystorePropertiesFile.exists()) {
+                keyAlias = keystoreProperties.getProperty("keyAlias")
+                keyPassword = keystoreProperties.getProperty("keyPassword")
+                storeFile = keystoreProperties.getProperty("storeFile")?.let { path -> rootProject.file(path) }
+                storePassword = keystoreProperties.getProperty("storePassword")
+            }
+        }
+    }
 
     defaultConfig {
-        applicationId = "com.example.shared_expense_manager"
+        applicationId = "com.prembhaskal.expensetracker"
         minSdk = 24
-        targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        targetSdk = 35
+        versionCode = 2
+        versionName = "0.2"
+
+        ndk {
+            debugSymbolLevel = "SYMBOL_TABLE"
+        }
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -33,10 +54,22 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            signingConfig = if (keystorePropertiesFile.exists()) signingConfigs.getByName("release") else null
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
+            )
+        }
+    }
+    packaging {
+        resources {
+            // Avoid INSTALL_BASELINE_PROFILE_FAILED on some devices (e.g. Android 15)
+            excludes += listOf(
+                "**/baseline.prof",
+                "**/baseline-profile*.prof",
+                "**/*.prof"
             )
         }
     }

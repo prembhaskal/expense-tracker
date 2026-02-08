@@ -5,17 +5,20 @@
 # For more details, see
 #   http://developer.android.com/guide/developing/tools/proguard.html
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# Keep BuildConfig
+-keep class com.prembhaskal.expensetracker.BuildConfig { *; }
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+# Gson: keep API DTOs and model classes used by reflection
+-keep class com.prembhaskal.expensetracker.data.remote.ApiDto$* { *; }
+-keep class com.prembhaskal.expensetracker.data.remote.** { *; }
+-keepattributes Signature
+-keepattributes *Annotation*
+-dontwarn sun.misc.Unsafe
 
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+# Room and entities (Room keeps these by default; keep for safety)
+-keep class com.prembhaskal.expensetracker.data.local.entity.** { *; }
+-keep class * extends androidx.room.RoomDatabase
+
+# Preserve line numbers for crash reports
+-keepattributes SourceFile,LineNumberTable
+-renamesourcefileattribute SourceFile
