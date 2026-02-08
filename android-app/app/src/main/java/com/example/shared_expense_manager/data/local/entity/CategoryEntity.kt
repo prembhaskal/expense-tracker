@@ -9,4 +9,5 @@ data class CategoryEntity(
     val name: String,
     val color: String?,
     val createdAt: String,
+    val pendingSync: Boolean = false,
 )

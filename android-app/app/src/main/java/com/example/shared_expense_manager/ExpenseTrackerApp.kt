@@ -29,8 +29,8 @@ class ExpenseTrackerApp : Application() {
         googleAuthHelper = GoogleAuthHelper(this, BuildConfig.GOOGLE_WEB_CLIENT_ID)
         database = AppDatabase.getInstance(this)
         apiClient = ApiClient(BuildConfig.API_BASE_URL) { authStore.getToken() }
-        expenseRepository = ExpenseRepository(database.expenseDao(), apiClient)
-        categoryRepository = CategoryRepository(database.categoryDao(), apiClient)
+        expenseRepository = ExpenseRepository(database.expenseDao(), database.pendingDeleteDao(), apiClient)
+        categoryRepository = CategoryRepository(database.categoryDao(), database.pendingCategoryDeleteDao(), apiClient)
         SyncScheduler.enqueuePeriodic(this)
     }
 }
