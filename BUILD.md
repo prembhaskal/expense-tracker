@@ -42,3 +42,9 @@ Android App:
 - do sync in background (like once in a minute or on demand but never block main UI due to it)
 - keep similar login option as in WEB
 - i think we will have use to provide APIs in main application and use them from android app.
+
+
+Updates needed on UI:
+ - [x] Amount: numeric keypad only (KeyboardType.Decimal)
+ - [x] Categories: dropdown with type-to-filter (ExposedDropdownMenuBox + filter field)
+ - [x] Date: tap opens calendar (DatePickerDialog)

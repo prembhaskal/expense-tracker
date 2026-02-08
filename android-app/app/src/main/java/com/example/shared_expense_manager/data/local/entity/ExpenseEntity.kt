@@ -19,4 +19,6 @@ data class ExpenseEntity(
     val updatedAt: String,
     val categoryName: String? = null,
     val addedByName: String? = null,
+    val pendingSync: Boolean = false,
+    val pendingUpdate: Boolean = false,
 )

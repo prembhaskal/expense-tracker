@@ -25,9 +25,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.example.shared_expense_manager.ExpenseTrackerApp
 import com.example.shared_expense_manager.data.local.entity.CategoryEntity
+import com.example.shared_expense_manager.sync.SyncScheduler
 import kotlinx.coroutines.launch
 
 @Composable
@@ -37,6 +39,7 @@ fun CategoriesScreen(app: ExpenseTrackerApp) {
     var error by remember { mutableStateOf<String?>(null) }
     var deleteConfirm by remember { mutableStateOf<CategoryEntity?>(null) }
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
 
     LazyColumn(
         modifier = Modifier.fillMaxSize().padding(16.dp),
@@ -58,7 +61,11 @@ fun CategoriesScreen(app: ExpenseTrackerApp) {
                     scope.launch {
                         val result = app.categoryRepository.addCategory(newName.trim(), null)
                         result.fold(
-                            onSuccess = { newName = ""; error = null },
+                            onSuccess = {
+                                newName = ""
+                                error = null
+                                SyncScheduler.enqueueOneTime(context)
+                            },
                             onFailure = { error = it.message ?: "Failed to add" },
                         )
                     }
@@ -100,6 +107,7 @@ fun CategoriesScreen(app: ExpenseTrackerApp) {
                     scope.launch {
                         app.categoryRepository.deleteCategory(c.id)
                         deleteConfirm = null
+                        SyncScheduler.enqueueOneTime(context)
                     }
                 }) { Text("Delete", color = MaterialTheme.colorScheme.error) }
             },

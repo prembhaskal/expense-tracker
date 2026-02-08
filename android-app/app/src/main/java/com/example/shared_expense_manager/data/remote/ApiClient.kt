@@ -47,7 +47,7 @@ class ApiClient(private val baseUrl: String, private val tokenProvider: () -> St
             if (!response.isSuccessful) throw ApiException(response.code, response.body?.string())
             val body = response.body?.string() ?: "[]"
             val list = gson.fromJson(body, Array<CategoryDto>::class.java).toList()
-            return list.map { CategoryEntity(it.id, it.name, it.color, it.createdAt) }
+            return list.map { CategoryEntity(it.id, it.name, it.color, it.createdAt, pendingSync = false) }
         }
     }
 
@@ -101,7 +101,7 @@ class ApiClient(private val baseUrl: String, private val tokenProvider: () -> St
         client.newCall(request).execute().use { response ->
             if (!response.isSuccessful) throw ApiException(response.code, response.body?.string())
             val dto = gson.fromJson(response.body?.string(), CategoryDto::class.java)
-            return CategoryEntity(dto.id, dto.name, dto.color, dto.createdAt)
+            return CategoryEntity(dto.id, dto.name, dto.color, dto.createdAt, pendingSync = false)
         }
     }
 
@@ -147,6 +147,8 @@ class ApiClient(private val baseUrl: String, private val tokenProvider: () -> St
         updatedAt = updatedAt,
         categoryName = categories?.name,
         addedByName = profiles?.fullName,
+        pendingSync = false,
+        pendingUpdate = false,
     )
 }
 

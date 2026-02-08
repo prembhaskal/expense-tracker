@@ -16,6 +16,9 @@ interface CategoryDao {
     @Query("SELECT * FROM categories ORDER BY name")
     suspend fun getAll(): List<CategoryEntity>
 
+    @Query("SELECT * FROM categories WHERE pendingSync = 1")
+    suspend fun getPendingSync(): List<CategoryEntity>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(categories: List<CategoryEntity>)
 
