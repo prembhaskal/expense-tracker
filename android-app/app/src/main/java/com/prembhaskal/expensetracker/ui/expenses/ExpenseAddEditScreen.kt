@@ -1,9 +1,9 @@
 package com.prembhaskal.expensetracker.ui.expenses
 
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -32,6 +32,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.foundation.text.KeyboardOptions
@@ -101,16 +103,23 @@ fun ExpenseAddEditScreen(
             label = { Text("Description") },
             modifier = Modifier.fillMaxWidth(),
         )
-        Box(modifier = Modifier.fillMaxWidth().clickable(indication = null, interactionSource = remember { MutableInteractionSource() }) { showDatePicker = true }) {
-            OutlinedTextField(
-                value = date,
-                onValueChange = { date = it },
-                label = { Text("Date") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                readOnly = true,
-            )
-        }
+        // Official pattern: pointerInput(Initial) so we get the tap before the TextField consumes it
+        OutlinedTextField(
+            value = date,
+            onValueChange = { },
+            label = { Text("Date") },
+            readOnly = true,
+            modifier = Modifier
+                .fillMaxWidth()
+                .pointerInput(date) {
+                    awaitEachGesture {
+                        awaitFirstDown(pass = PointerEventPass.Initial)
+                        val up = waitForUpOrCancellation(pass = PointerEventPass.Initial)
+                        if (up != null) showDatePicker = true
+                    }
+                },
+            singleLine = true,
+        )
         if (categories.isNotEmpty()) {
             CategoryDropdown(
                 categories = categories,
