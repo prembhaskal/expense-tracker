@@ -17,11 +17,22 @@ class AuthStore(context: Context) {
     )
 
     private val keyToken = "access_token"
+    private val keyRefreshToken = "refresh_token"
 
     fun getToken(): String? = prefs.getString(keyToken, null)
 
+    fun getRefreshToken(): String? =
+        prefs.getString(keyRefreshToken, null)?.takeIf { it.isNotBlank() }
+
     fun setToken(token: String?) {
         prefs.edit().putString(keyToken, token).apply()
+    }
+
+    fun setSession(accessToken: String, refreshToken: String?) {
+        prefs.edit()
+            .putString(keyToken, accessToken)
+            .putString(keyRefreshToken, refreshToken ?: "")
+            .apply()
     }
 
     fun clear() {
