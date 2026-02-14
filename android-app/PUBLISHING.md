@@ -105,7 +105,7 @@ Before the app can go live, complete at least:
 
 ---
 
-## 6. (Optional) Change applicationId for production
+## 9. (Optional) Change applicationId for production
 
 The app uses `com.prembhaskal.expensetracker`. To use a different package name:
 
@@ -121,7 +121,55 @@ If you keep `com.prembhaskal.expensetracker`, no change is needed.
 
 ---
 
-## 7. After publishing
+## 7. Version management for new releases
+
+**Before each new release**, you must update the version codes in `app/build.gradle.kts`:
+
+### versionCode
+- **What it is:** An integer that represents the app version internally to Google Play.
+- **Rules:** Must be **incremented by at least 1** for each new release. Google Play uses this to determine if a new version is available.
+- **Current value:** See `versionCode = X` in `app/build.gradle.kts` (currently: 3)
+- **Update:** Increment to 4, then 5, then 6, etc. for each new release.
+
+### versionName
+- **What it is:** A human-readable version string shown to users (e.g., "1.0", "0.3", "1.2.1").
+- **Format:** Typically semantic versioning (MAJOR.MINOR.PATCH) or your preferred scheme.
+- **Rules:** No rules enforced by Google Play; can stay the same, go backwards, or skip numbers. However, it's best practice to follow semantic versioning.
+- **Current value:** See `versionName = "X"` in `app/build.gradle.kts` (currently: "0.3")
+- **Update:** Increment to "0.4", "1.0", "1.1", etc. based on the significance of changes.
+
+### Example workflow for a new release
+
+1. **Identify the current versions:**
+   ```kotlin
+   versionCode = 3
+   versionName = "0.3"
+   ```
+
+2. **Decide on the new version:**
+   - Bug fixes or minor improvements → bump patch: `0.3` → `0.4`
+   - New features → bump minor: `0.3` → `0.4` or `0.3` → `1.0`
+   - Major redesign → bump major: `0.3` → `1.0`
+
+3. **Update `app/build.gradle.kts`:**
+   ```kotlin
+   versionCode = 4         // Always increment by at least 1
+   versionName = "0.4"     // Update based on changes
+   ```
+
+4. **Commit this change:**
+   ```bash
+   git add android-app/app/build.gradle.kts
+   git commit -m "Release v0.4 (versionCode 4)"
+   ```
+
+5. **Build and upload the AAB** (see section 3) with the new versions.
+
+**Important:** Each release to Google Play must have a unique, higher `versionCode`. Failure to increment will cause the upload to be rejected.
+
+---
+
+## 8. After publishing
 
 - **Updates:** Bump `versionCode` (and optionally `versionName`) in `app/build.gradle.kts`, build a new AAB, then create a new release in the same track and upload the new AAB.
 - **Staged rollout:** You can start with a percentage of users (e.g. 20%) and increase gradually.
