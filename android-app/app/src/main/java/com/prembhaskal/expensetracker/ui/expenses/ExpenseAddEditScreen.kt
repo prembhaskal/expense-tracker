@@ -38,6 +38,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.foundation.text.KeyboardOptions
 import com.prembhaskal.expensetracker.sync.SyncScheduler
+import com.prembhaskal.expensetracker.util.FileLogger
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.prembhaskal.expensetracker.ExpenseTrackerApp
@@ -153,6 +154,7 @@ fun ExpenseAddEditScreen(
                     loading = false
                     result.fold(
                         onSuccess = {
+                            FileLogger.i("ExpenseAddEdit", "saved, enqueuing one-time sync")
                             SyncScheduler.enqueueOneTime(context)
                             onBack()
                         },

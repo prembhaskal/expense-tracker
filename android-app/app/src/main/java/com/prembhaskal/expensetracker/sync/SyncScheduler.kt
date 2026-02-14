@@ -8,6 +8,7 @@ import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
+import com.prembhaskal.expensetracker.util.FileLogger
 import java.util.concurrent.TimeUnit
 
 object SyncScheduler {
@@ -19,6 +20,7 @@ object SyncScheduler {
 
     /** Enqueue a one-time sync (runs when network is available). Call after any local mutation. */
     fun enqueueOneTime(context: Context) {
+        FileLogger.i("SyncScheduler", "enqueueOneTime called")
         val request = OneTimeWorkRequestBuilder<SyncWorker>()
             .setConstraints(syncConstraints)
             .build()
@@ -31,6 +33,7 @@ object SyncScheduler {
 
     /** Enqueue periodic sync (every 15 min when network available). */
     fun enqueuePeriodic(context: Context) {
+        FileLogger.i("SyncScheduler", "enqueuePeriodic called")
         val request = PeriodicWorkRequestBuilder<SyncWorker>(15, TimeUnit.MINUTES)
             .setConstraints(syncConstraints)
             .build()

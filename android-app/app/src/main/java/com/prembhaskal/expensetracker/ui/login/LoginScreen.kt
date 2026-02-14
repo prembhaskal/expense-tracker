@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import com.prembhaskal.expensetracker.ExpenseTrackerApp
 import com.prembhaskal.expensetracker.data.remote.ApiException
 import com.prembhaskal.expensetracker.sync.SyncScheduler
+import com.prembhaskal.expensetracker.util.FileLogger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -75,7 +76,8 @@ fun LoginScreen(
                 try {
                     val session = app.apiClient.loginWithIdToken(idToken)
                     Log.d(TAG, "loginWithIdToken: success, got access_token")
-                    app.authStore.setToken(session.accessToken)
+                    app.authStore.setSession(session.accessToken, session.refreshToken)
+                    FileLogger.i(TAG, "Login: token set, enqueuing one-time sync")
                     SyncScheduler.enqueueOneTime(context)
                     true
                 } catch (e: Exception) {

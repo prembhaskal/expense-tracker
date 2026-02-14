@@ -8,6 +8,7 @@ import com.prembhaskal.expensetracker.data.remote.ApiClient
 import com.prembhaskal.expensetracker.data.repository.CategoryRepository
 import com.prembhaskal.expensetracker.data.repository.ExpenseRepository
 import com.prembhaskal.expensetracker.sync.SyncScheduler
+import com.prembhaskal.expensetracker.util.FileLogger
 
 class ExpenseTrackerApp : Application() {
     lateinit var authStore: AuthStore
@@ -25,12 +26,14 @@ class ExpenseTrackerApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        FileLogger.init(this)
         authStore = AuthStore(this)
         googleAuthHelper = GoogleAuthHelper(this, BuildConfig.GOOGLE_WEB_CLIENT_ID)
         database = AppDatabase.getInstance(this)
-        apiClient = ApiClient(BuildConfig.API_BASE_URL) { authStore.getToken() }
+        apiClient = ApiClient(BuildConfig.API_BASE_URL, { authStore.getToken() }, authStore)
         expenseRepository = ExpenseRepository(database.expenseDao(), database.pendingDeleteDao(), apiClient)
         categoryRepository = CategoryRepository(database.categoryDao(), database.pendingCategoryDeleteDao(), apiClient)
         SyncScheduler.enqueuePeriodic(this)
+        FileLogger.i("App", "onCreate: enqueuing periodic sync")
     }
 }
