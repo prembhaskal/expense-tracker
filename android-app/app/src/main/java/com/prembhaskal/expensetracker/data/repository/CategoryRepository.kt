@@ -6,6 +6,7 @@ import com.prembhaskal.expensetracker.data.local.entity.CategoryEntity
 import com.prembhaskal.expensetracker.data.local.entity.PendingCategoryDeleteEntity
 import com.prembhaskal.expensetracker.data.remote.ApiClient
 import com.prembhaskal.expensetracker.data.remote.ApiException
+import com.prembhaskal.expensetracker.util.FileLogger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
@@ -29,10 +30,13 @@ class CategoryRepository(
         try {
             val categories = apiClient.getCategories()
             categoryDao.insertAll(categories)
+            FileLogger.i("CategoryRepository", "syncFromApi: pulled ${categories.size} categories")
             Result.success(Unit)
         } catch (e: ApiException) {
+            FileLogger.e("CategoryRepository", "syncFromApi: failed code=${e.code} msg=${e.message}", e)
             Result.failure(e)
         } catch (e: Exception) {
+            FileLogger.e("CategoryRepository", "syncFromApi: failed msg=${e.message}", e)
             Result.failure(e)
         }
     }
@@ -49,6 +53,7 @@ class CategoryRepository(
                 pendingSync = true,
             )
             categoryDao.insert(local)
+            FileLogger.i("CategoryRepository", "addCategory: saved locally id=${local.id}")
             Result.success(local)
         }
 
@@ -76,17 +81,21 @@ class CategoryRepository(
     suspend fun pushPendingCategories(): Result<Unit> = withContext(Dispatchers.IO) {
         try {
             val pending = categoryDao.getPendingSync()
+            FileLogger.i("CategoryRepository", "pushPendingCategories: ${pending.size} pending")
             if (pending.isEmpty()) return@withContext Result.success(Unit)
             for (c in pending) {
                 try {
                     apiClient.createCategory(c.name, c.color)
                     categoryDao.deleteById(c.id)
+                    FileLogger.i("CategoryRepository", "pushPendingCategories: synced id=${c.id}")
                 } catch (e: Exception) {
+                    FileLogger.e("CategoryRepository", "pushPendingCategories: failed id=${c.id} msg=${e.message}", e)
                     return@withContext Result.failure(e)
                 }
             }
             Result.success(Unit)
         } catch (e: Exception) {
+            FileLogger.e("CategoryRepository", "pushPendingCategories: failed msg=${e.message}", e)
             Result.failure(e)
         }
     }
@@ -94,17 +103,21 @@ class CategoryRepository(
     suspend fun pushPendingCategoryDeletes(): Result<Unit> = withContext(Dispatchers.IO) {
         try {
             val pending = pendingCategoryDeleteDao.getAll()
+            FileLogger.i("CategoryRepository", "pushPendingCategoryDeletes: ${pending.size} pending")
             if (pending.isEmpty()) return@withContext Result.success(Unit)
             for (e in pending) {
                 try {
                     apiClient.deleteCategory(e.categoryId)
                     pendingCategoryDeleteDao.deleteByCategoryId(e.categoryId)
+                    FileLogger.i("CategoryRepository", "pushPendingCategoryDeletes: synced id=${e.categoryId}")
                 } catch (err: Exception) {
+                    FileLogger.e("CategoryRepository", "pushPendingCategoryDeletes: failed id=${e.categoryId} msg=${err.message}", err)
                     return@withContext Result.failure(err)
                 }
             }
             Result.success(Unit)
         } catch (e: Exception) {
+            FileLogger.e("CategoryRepository", "pushPendingCategoryDeletes: failed msg=${e.message}", e)
             Result.failure(e)
         }
     }

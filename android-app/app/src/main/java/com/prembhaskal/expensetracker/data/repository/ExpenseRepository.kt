@@ -9,6 +9,7 @@ import com.prembhaskal.expensetracker.data.local.dao.MonthTotal
 import com.prembhaskal.expensetracker.data.local.dao.CategoryTotal
 import com.prembhaskal.expensetracker.data.remote.ApiClient
 import com.prembhaskal.expensetracker.data.remote.ApiException
+import com.prembhaskal.expensetracker.util.FileLogger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
@@ -43,10 +44,13 @@ class ExpenseRepository(
         try {
             val expenses = apiClient.getExpenses(500, 0)
             expenseDao.insertAll(expenses)
+            FileLogger.i(TAG, "syncFromApi: pulled ${expenses.size} expenses")
             Result.success(Unit)
         } catch (e: ApiException) {
+            FileLogger.e(TAG, "syncFromApi: failed code=${e.code} msg=${e.message}", e)
             Result.failure(e)
         } catch (e: Exception) {
+            FileLogger.e(TAG, "syncFromApi: failed msg=${e.message}", e)
             Result.failure(e)
         }
     }
@@ -67,6 +71,7 @@ class ExpenseRepository(
                 pendingSync = true,
             )
             expenseDao.insert(localEntity)
+            FileLogger.i(TAG, "addExpense: saved locally id=${localEntity.id} amount=$amount")
             Log.d(TAG, "addExpense: saved locally (pendingSync) id=${localEntity.id} amount=$amount")
             Result.success(localEntity)
         }
@@ -74,20 +79,24 @@ class ExpenseRepository(
     suspend fun pushPendingExpenses(): Result<Unit> = withContext(Dispatchers.IO) {
         try {
             val pending = expenseDao.getPendingSync()
+            FileLogger.i(TAG, "pushPendingExpenses: ${pending.size} pending")
             if (pending.isEmpty()) return@withContext Result.success(Unit)
             Log.d(TAG, "pushPendingExpenses: pushing ${pending.size} pending expense(s)")
             for (e in pending) {
                 try {
                     apiClient.createExpense(e.amount, e.description, e.date, e.categoryId)
                     expenseDao.deleteById(e.id)
+                    FileLogger.i(TAG, "pushPendingExpenses: synced id=${e.id}")
                     Log.d(TAG, "pushPendingExpenses: synced local id=${e.id}")
                 } catch (err: Exception) {
+                    FileLogger.e(TAG, "pushPendingExpenses: failed id=${e.id} msg=${err.message}", err)
                     Log.w(TAG, "pushPendingExpenses: failed for id=${e.id}", err)
                     return@withContext Result.failure(err)
                 }
             }
             Result.success(Unit)
         } catch (e: Exception) {
+            FileLogger.e(TAG, "pushPendingExpenses: failed msg=${e.message}", e)
             Log.w(TAG, "pushPendingExpenses: failed", e)
             Result.failure(e)
         }
@@ -127,20 +136,24 @@ class ExpenseRepository(
     suspend fun pushPendingUpdates(): Result<Unit> = withContext(Dispatchers.IO) {
         try {
             val pending = expenseDao.getPendingUpdates()
+            FileLogger.i(TAG, "pushPendingUpdates: ${pending.size} pending")
             if (pending.isEmpty()) return@withContext Result.success(Unit)
             Log.d(TAG, "pushPendingUpdates: pushing ${pending.size} pending update(s)")
             for (e in pending) {
                 try {
                     apiClient.updateExpense(e.id, e.amount, e.description, e.date, e.categoryId)
                     expenseDao.clearPendingUpdate(e.id)
+                    FileLogger.i(TAG, "pushPendingUpdates: synced id=${e.id}")
                     Log.d(TAG, "pushPendingUpdates: synced id=${e.id}")
                 } catch (err: Exception) {
+                    FileLogger.e(TAG, "pushPendingUpdates: failed id=${e.id} msg=${err.message}", err)
                     Log.w(TAG, "pushPendingUpdates: failed for id=${e.id}", err)
                     return@withContext Result.failure(err)
                 }
             }
             Result.success(Unit)
         } catch (e: Exception) {
+            FileLogger.e(TAG, "pushPendingUpdates: failed msg=${e.message}", e)
             Log.w(TAG, "pushPendingUpdates: failed", e)
             Result.failure(e)
         }
@@ -149,20 +162,24 @@ class ExpenseRepository(
     suspend fun pushPendingDeletes(): Result<Unit> = withContext(Dispatchers.IO) {
         try {
             val pending = pendingDeleteDao.getAll()
+            FileLogger.i(TAG, "pushPendingDeletes: ${pending.size} pending")
             if (pending.isEmpty()) return@withContext Result.success(Unit)
             Log.d(TAG, "pushPendingDeletes: pushing ${pending.size} pending delete(s)")
             for (e in pending) {
                 try {
                     apiClient.deleteExpense(e.expenseId)
                     pendingDeleteDao.deleteByExpenseId(e.expenseId)
+                    FileLogger.i(TAG, "pushPendingDeletes: synced id=${e.expenseId}")
                     Log.d(TAG, "pushPendingDeletes: synced delete id=${e.expenseId}")
                 } catch (err: Exception) {
+                    FileLogger.e(TAG, "pushPendingDeletes: failed id=${e.expenseId} msg=${err.message}", err)
                     Log.w(TAG, "pushPendingDeletes: failed for id=${e.expenseId}", err)
                     return@withContext Result.failure(err)
                 }
             }
             Result.success(Unit)
         } catch (e: Exception) {
+            FileLogger.e(TAG, "pushPendingDeletes: failed msg=${e.message}", e)
             Log.w(TAG, "pushPendingDeletes: failed", e)
             Result.failure(e)
         }
